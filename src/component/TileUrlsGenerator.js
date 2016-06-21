@@ -6,7 +6,8 @@
  */
 ymaps.modules.define('heatmap.component.TileUrlsGenerator', [
     'option.Manager',
-    'heatmap.component.Canvas'
+    'heatmap.component.Canvas',
+    'heatmap.component.ImageProxy'
 ], function (
     provide,
     OptionManager,
@@ -121,7 +122,7 @@ ymaps.modules.define('heatmap.component.TileUrlsGenerator', [
             }
         }
 
-        return this._canvas.generateDataURLHeatmap(points);
+        return this._canvas.generateDataPromise(points);
     };
 
     /**

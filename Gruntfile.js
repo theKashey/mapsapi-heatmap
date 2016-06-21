@@ -1,5 +1,4 @@
 module.exports = function (grunt) {
-
     // Project config
     grunt.initConfig({
         pkg: grunt.file.readJSON('package.json'),
@@ -9,7 +8,8 @@ module.exports = function (grunt) {
                     'src/Heatmap.js',
                     'src/component/dataConverter.js',
                     'src/component/TileUrlsGenerator.js',
-                    'src/component/Canvas.js'
+                    'src/component/Canvas.js',
+                    'src/component/imageProxy.js'
                 ],
                 dest: 'build/Heatmap.js'
             }

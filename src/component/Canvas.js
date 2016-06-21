@@ -84,6 +84,22 @@ ymaps.modules.define('heatmap.component.Canvas', [
 
     /**
      * @public
+     * @function generateDataURLHeatmap
+     * @description Returns Generates Heatmap and returns as Data URL
+     *
+     * @param {Number[][]} points Array of points [[x1, y1], [x2, y2], ...].
+     * @returns {String} Data URL.
+     */
+    Canvas.prototype.generateDataPromise = function (points) {
+        return {
+            ym_heatmap: true,
+            points: points,
+            canvas: this
+        }
+    };
+
+    /**
+     * @public
      * @function destroy
      * @description Destroys module.
      */
