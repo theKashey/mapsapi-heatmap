@@ -6,12 +6,12 @@
  */
 ymaps.modules.define('heatmap.component.Canvas', [
     'option.Manager',
-    'Monitor'
-],  function (
-    provide,
-    OptionManager,
-    Monitor
-) {
+    'Monitor',
+    'util.hd'
+], function (provide,
+             OptionManager,
+             Monitor,
+             utilHd) {
     /**
      * @constant DEFAULT_OPTIONS
      * @description Default Heatmap options.
@@ -45,8 +45,9 @@ ymaps.modules.define('heatmap.component.Canvas', [
      */
     var Canvas = function (size) {
         this._canvas = document.createElement('canvas');
-        this._canvas.width = size[0];
-        this._canvas.height = size[1];
+        this._scaleRatio = 1;//utilHd.getLimitedPixelRatio();
+        this._canvas.width = this._scaleRatio * size[0];
+        this._canvas.height = this._scaleRatio * size[1];
 
         this._context = this._canvas.getContext('2d');
 
@@ -170,12 +171,12 @@ ymaps.modules.define('heatmap.component.Canvas', [
         var brush = document.createElement('canvas'),
             context = brush.getContext('2d'),
 
-            radius = this.getBrushRadius(),
+            radius = this.getBrushRadius() * this._scaleRatio,
             gradient = context.createRadialGradient(radius, radius, 0, radius, radius, radius);
 
         gradient.addColorStop(0, 'rgba(0,0,0,1)');
         gradient.addColorStop(1, 'rgba(0,0,0,0)');
-  
+
         context.fillStyle = gradient;
         context.fillRect(0, 0, 2 * radius, 2 * radius);
 
@@ -218,20 +219,21 @@ ymaps.modules.define('heatmap.component.Canvas', [
      * @returns {Canvas} Canvas.
      */
     Canvas.prototype._drawHeatmap = function (points) {
-        var context = this._context,
-            radius = this.getBrushRadius(),
+        var context = this._context;
+        var radius = this.getBrushRadius();
 
-            intensityOfMidpoint = this.options.get(
-                'intensityOfMidpoint',
-                DEFAULT_OPTIONS.intensityOfMidpoint
-            ),
-            medianaOfWeights = this.options.get(
-                'medianaOfWeights',
-                DEFAULT_OPTIONS.medianaOfWeights
-            ),
-            // Factor to set median intensity.
-            weightFactor = intensityOfMidpoint / medianaOfWeights;
+        var intensityOfMidpoint = this.options.get(
+            'intensityOfMidpoint',
+            DEFAULT_OPTIONS.intensityOfMidpoint
+        );
+        var medianaOfWeights = this.options.get(
+            'medianaOfWeights',
+            DEFAULT_OPTIONS.medianaOfWeights
+        );
+        // Factor to set median intensity.
+        var weightFactor = intensityOfMidpoint / medianaOfWeights;
 
+        context.scale(this._scaleRatio, this._scaleRatio);
         context.clearRect(0, 0, this._canvas.width, this._canvas.height);
 
         for (var i = 0, length = points.length; i < length; i++) {
@@ -243,6 +245,7 @@ ymaps.modules.define('heatmap.component.Canvas', [
             );
         }
 
+        context.scale(1.0 / this._scaleRatio, 1.0 / this._scaleRatio);
         var heatmapImage = context.getImageData(0, 0, this._canvas.width, this._canvas.height);
         this._colorize(heatmapImage.data);
         context.putImageData(heatmapImage, 0, 0);

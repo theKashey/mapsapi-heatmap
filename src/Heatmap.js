@@ -131,6 +131,8 @@ ymaps.modules.define('Heatmap', [
      */
     Heatmap.prototype._refresh = function () {
         if (this._layer) {
+            this._map.layers.remove(this._layer);
+            this._map.layers.add(this._layer);
             this._layer.update();
         }
         return this;
@@ -147,7 +149,12 @@ ymaps.modules.define('Heatmap', [
         this._setupTileUrlsGenerator();
         var getTileUrl = this._tileUrlsGenerator.getTileUrl.bind(this._tileUrlsGenerator);
 
-        this._layer = new Layer(getTileUrl, { tileTransparent: true });
+        this._layer = new Layer(getTileUrl, {
+            tileTransparent: true,
+            webgl: true
+        });
+        //this._layer.options.setParent(this.options);
+
         this._setupOptionMonitor();
 
         return this._layer;

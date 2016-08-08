@@ -148,6 +148,8 @@ ymaps.modules.define('Heatmap', [
         var getTileUrl = this._tileUrlsGenerator.getTileUrl.bind(this._tileUrlsGenerator);
 
         this._layer = new Layer(getTileUrl, { tileTransparent: true });
+        //this._layer.options.setParent(this.options);
+
         this._setupOptionMonitor();
 
         return this._layer;
@@ -418,7 +420,8 @@ ymaps.modules.define('heatmap.component.dataConverter', [], function (provide) {
  */
 ymaps.modules.define('heatmap.component.TileUrlsGenerator', [
     'option.Manager',
-    'heatmap.component.Canvas'
+    'heatmap.component.Canvas',
+    'heatmap.component.ImageProxy'
 ], function (
     provide,
     OptionManager,
@@ -533,7 +536,7 @@ ymaps.modules.define('heatmap.component.TileUrlsGenerator', [
             }
         }
 
-        return this._canvas.generateDataURLHeatmap(points);
+        return this._canvas.generateDataPromise(points);
     };
 
     /**
@@ -672,6 +675,22 @@ ymaps.modules.define('heatmap.component.Canvas', [
         this._drawHeatmap(points || []);
 
         return this._canvas.toDataURL();
+    };
+
+    /**
+     * @public
+     * @function generateDataURLHeatmap
+     * @description Returns Generates Heatmap and returns as Data URL
+     *
+     * @param {Number[][]} points Array of points [[x1, y1], [x2, y2], ...].
+     * @returns {String} Data URL.
+     */
+    Canvas.prototype.generateDataPromise = function (points) {
+        return {
+            ym_heatmap: true,
+            points: points,
+            canvas: this
+        }
     };
 
     /**
@@ -852,3 +871,21 @@ ymaps.modules.define('heatmap.component.Canvas', [
 
     provide(Canvas);
 });
+
+ymaps.modules.define('heatmap.component.ImageProxy', [
+    'util.imageLoader', 'vow'
+], function (provide, imageLoader, vow) {
+
+    imageLoader.proxy.add({
+        matchUrl: function (url) {
+            if (url && url.ym_heatmap) {
+                return 1;
+            }
+        },
+        load: function (url, request) {
+            return vow.resolve(url.canvas.generateDataURLHeatmap(url.points));
+        }
+    }); 
+
+    provide(true);
+}); 

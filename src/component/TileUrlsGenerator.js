@@ -8,16 +8,17 @@ ymaps.modules.define('heatmap.component.TileUrlsGenerator', [
     'option.Manager',
     'heatmap.component.Canvas',
     'heatmap.component.ImageProxy'
-], function (
-    provide,
-    OptionManager,
-    HeatmapCanvas
-) {
+], function (provide,
+             OptionManager,
+             HeatmapCanvas,
+             ImageProxy) {
     /**
      * Heatmap tile size.
      */
-    var TILE_SIZE = [256, 256];
+    var TILE_SIZE = [256, 256],
+        heatMapID = 0;
 
+    var dataLookup = ImageProxy.lookup;
     /**
      * @public
      * @function TileUrlsGenerator
@@ -28,6 +29,8 @@ ymaps.modules.define('heatmap.component.TileUrlsGenerator', [
      */
     var TileUrlsGenerator = function (projection, points) {
         this._projection = projection;
+        this.heatMapID = heatMapID++;
+        dataLookup[this.heatMapID] = this;
 
         this._canvas = new HeatmapCanvas(TILE_SIZE);
         this.options = new OptionManager({});
@@ -88,6 +91,15 @@ ymaps.modules.define('heatmap.component.TileUrlsGenerator', [
      * @returns {String} Data URL.
      */
     TileUrlsGenerator.prototype.getTileUrl = function (tileNumber, zoom) {
+        var rnd = Math.round(+(new Date())/1000)
+        return 'ym-heatmap://mid=' + this.heatMapID + '/x=' + tileNumber[0]+'/y='+tileNumber[1] + '/z=' + zoom+'/rnd='+rnd;
+    };
+
+    TileUrlsGenerator.prototype.getTileImage = function (tileNumber, zoom) {
+        return this._canvas.generateDataURLHeatmap(this.getTileData(tileNumber, zoom));
+    };
+
+    TileUrlsGenerator.prototype.getTileData = function (tileNumber, zoom) {
         var radiusFactor = this._canvas.options.get('radiusFactor');
         if (this.options.get('dissipating')) {
             if (radiusFactor != zoom) {
@@ -118,11 +130,10 @@ ymaps.modules.define('heatmap.component.TileUrlsGenerator', [
                         (point[1] - tileBounds[0][1]) * zoomFactor
                     ],
                     weight: this._points[i].weight
-                });
+                })
             }
         }
-
-        return this._canvas.generateDataPromise(points);
+        return points;
     };
 
     /**
@@ -135,6 +146,7 @@ ymaps.modules.define('heatmap.component.TileUrlsGenerator', [
         this._canvas = null;
 
         this._projection = null;
+        delete dataLookup[this.heatMapID];
     };
 
     /**
